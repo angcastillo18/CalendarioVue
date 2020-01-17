@@ -5,8 +5,22 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
+    loading:{
+      titulo:'',
+      estado:false,
+      color:'primary'
+    }
   },
   mutations: {
+    mostrarLoading(state,payload){
+      //el titulo sera enviado como parametro
+      state.loading.titulo=payload.titulo
+      state.loading.estado=true
+      state.loading.color=payload.color
+    },
+    ocultarLoading(state){
+      state.loading.estado=false
+    }
   },
   actions: {
   },

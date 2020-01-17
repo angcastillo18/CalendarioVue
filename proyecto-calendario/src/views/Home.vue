@@ -8,13 +8,14 @@
           locale="es-PE"  
           :min="minimo"
           :max="maximo"
+          @change="getDolar(fecha)"
           >
 
           </v-date-picker>
         </v-card>
         <v-card color="error" dark>
           <v-card-text class="display-1 text-center">
-            Valor del dólar: {{valor}} - {{fecha}}
+            Valor del dólar: {{valor}} - del Día: {{fecha}}
           </v-card-text>
         </v-card>
       </v-col>
@@ -26,7 +27,8 @@
 <script>
 //importar axios
 import axios from "axios";
-
+//importamos losmetodos de vuex
+import {mapMutations} from "vuex";
 
 export default {
   name: 'home',
@@ -41,15 +43,42 @@ export default {
     }
   },
   methods:{
+    //llamamos a las mutaciones
+    ...mapMutations(['mostrarLoading','ocultarLoading']),
+    //
     async getDolar(dia){
-      
-      let datos=await axios.get(`https://mindicador.cl/api/dolar/${dia}`)
-      console.log(datos.data.serie[0].valor);
-      this.valor=await datos.data.serie[0].valor;
+      //tenemos que voltear el orden de la fecha captada en el v-model fecha
+      //porque el api recibe la fecha alreves
+      let newFormatDate=dia.split("-").reverse().join("-");
+      //console.log(newFormatDate);
+      //try catch para manejar errores
+      try {
+        //mostrar el loading
+        this.mostrarLoading({titulo:'Accediendo a información',color:'secondary'})
+        //
+          
+          let datos=await axios.get(`https://mindicador.cl/api/dolar/${newFormatDate}`)
+          //console.log(datos.data.serie[0]);
+          //los dias sabados y domingos no trae datos del api 
+          //por eso que se hace la validacion del datos.data.serie[0]== vacio
+          if(datos.data.serie[0]!== undefined){
+            this.valor=await datos.data.serie[0].valor;  
+          }else{
+            this.valor='Sin resultados';
+          }
+      } catch (error) {
+        console.log(error);
+      }
+      //finally se ejecuta luego del try catch, asi alla error o no
+      finally{
+        //cuando termina la carga
+        this.ocultarLoading();
+      }
+       
     }
   },
   created() {
-    this.getDolar('01-02-2019');
+    this.getDolar(this.fecha);
     
     //min 31.51 del video
   },
